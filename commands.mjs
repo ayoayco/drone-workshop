@@ -71,15 +71,22 @@ export const move = async (to, speed = 80) => {
     };
 };
 
-export const lookForMissionPad = async (goalMid) => new Promise((resolve, reject) => {
-    let currentMid = await listenState().mid;
+export const lookForMissionPad = async (goalMid, direction = 'forward', step = 20) => new Promise(async (resolve, reject) => {
+    let state = await listenState();
 
-    do {
-        currentMid = await command('forward 100');
-        console.log(currentMid);
-    } while (currentMid === goalMid);
+    const { x, y, z, mid } = await new Promise(async (resolve, reject) => {
+        while (state.mid !== goalMid) {
+            state = await command(`${direction} ${step}`);
+        }
+        console.log(state);
+        return resolve(state);
+    });
 
-    resolve(listenState())
+    // console.log({x, y, z, mid });
+    await delay(.1);
+    // state = await command(`go 0 0 0 20 ${goalMid}`);
+
+    resolve(state);
 });
 
 export const start = async () => {
