@@ -70,4 +70,12 @@ export const move = async (to, speed = 80) => {
     }
 }
 
+export const lookForMissionPad = await (goalMid) => {
+    let currentMid = await listenState().mid;
+
+    do {
+        currentMid = await command('forward 100');
+    } while (currentMid === goalMid);
+}
+
 export const start = async () => command('command');
