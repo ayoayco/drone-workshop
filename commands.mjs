@@ -1,12 +1,10 @@
 import dgram from 'node:dgram';
+import { listenState } from './telemetry.mjs';
 
-const ipAddress = '192.168.8.123';
+const ipAddress = '192.168.8.193';
 const commandPort = '8889';
-const statePort = '8890';
 
 const server = dgram.createSocket('udp4');
-const state = dgram.createSocket('udp4');
-
 server.on('error', (err) => {
     console.log('Something went wrong:', err);
 })
@@ -18,8 +16,7 @@ server.addListener('message', (msg, rinfo) => {
     console.log('received message', rinfo.address, message);
 })
 
-
-function delay(seconds) {
+const delay = (seconds) => {
     console.log('waiting', seconds || 'default 7s');
     seconds = seconds || 7;
     const time = seconds * 1000;
@@ -32,63 +29,28 @@ function delay(seconds) {
     });
 }
 
-function command(task) {
+export const command = (task) => new Promise((resolve, reject) => {
     console.log(task);
+    server.once('message', message => {
+        console.log(message.toString());
+        const state = await listenState();
+        /ok/.test(message.toString())
+            ? resolve(state)
+            : reject(state);
+    });
     server.send(task, commandPort, ipAddress, (err) => {if (err) console.log(err)});
-}
-
-
-// process messages
-state.on('error', (err) => {
-    console.log('something went wrong', err);
 });
-state.bind(statePort, '0.0.0.0', () => {
-    console.log('bound to state');
-});
-state.addListener('message', (msg) => {
-    const message = msg.toString();
-    const attributePairs = message.split(';')
-    const rawState = {};
-    const allowedKeys = ['mid','x','y','z'];
+
+export const move = async (to, speed = 80) => {
+    const current = await listenState();
+    const expectedResult = () => ({
+        ...current,
+        x: current.x + to.x,
+        y: current.y + to.y,
+        z: current.z + to.z,
+    })();
+    const result = await command(`go ${x} ${y} ${z} ${speed}`);
     
-    attributePairs.map((attribute) => {
-        const [key, value] = attribute.split(':');
-        return { key, value }
-    })
-    .filter(s => allowedKeys.includes(s.key))
-    .forEach(attribute => {
-        rawState[attribute.key] = attribute.value;
-    })
-
-    console.log(rawState);
-});
-
-const start = async () => {
-    command('command');
-    await delay(1);
 }
 
-const main = async () => {
-    start();
-
-    command('takeoff');
-
-    await delay();
-    command('forward 100');
-
-    await delay();
-    command('left 100');
-
-    await delay();
-    command('back 100');
-
-    await delay();
-    command('right 100');
-
-    await delay();
-    command('land');
-}
-
-
-start();
-// main();
+export const start = async () => command('command');
