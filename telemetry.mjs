@@ -11,7 +11,7 @@ state.bind(statePort, '0.0.0.0', () => {
     console.log('bound to state');
 });
 
-export const listenState = new Promise(
+export const listenState = () => new Promise(
 (resolve, reject) => {
     state.once('message', (msg) => {
         const message = msg.toString();

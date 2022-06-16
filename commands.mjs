@@ -31,9 +31,10 @@ const delay = (seconds) => {
 
 export const command = (task) => new Promise((resolve, reject) => {
     console.log(task);
-    server.once('message', message => {
+    server.once('message', async message => {
         console.log(message.toString());
         const state = await listenState();
+        console.log(state);
         /ok/.test(message.toString())
             ? resolve(state)
             : reject(state);
@@ -41,16 +42,32 @@ export const command = (task) => new Promise((resolve, reject) => {
     server.send(task, commandPort, ipAddress, (err) => {if (err) console.log(err)});
 });
 
+const getExpected = (current, to) => ({
+    ...current,
+    x: current.x + to.x,
+    y: current.y + to.y,
+    z: current.z + to.z,
+});
+
+const getDivergence = (result, expected) => ({
+    x: result.x - expected.x,
+    y: result.y - expected.y,
+    z: result.z - expected.z, 
+}); 
+
 export const move = async (to, speed = 80) => {
     const current = await listenState();
-    const expectedResult = () => ({
-        ...current,
-        x: current.x + to.x,
-        y: current.y + to.y,
-        z: current.z + to.z,
-    })();
+    const expected = getExpected(current, to);
     const result = await command(`go ${x} ${y} ${z} ${speed}`);
-    
+    const divergence = () => getDivergence(result, expected);
+
+    console.log(divergence);
+    // await move(divergence);
+
+    return {
+        ...result,
+        divergence,
+    }
 }
 
 export const start = async () => command('command');
