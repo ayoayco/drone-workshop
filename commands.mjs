@@ -67,10 +67,10 @@ export const move = async (to, speed = 80) => {
     return {
         ...result,
         divergence,
-    }
-}
+    };
+};
 
-export const lookForMissionPad = await (goalMid) => {
+export const lookForMissionPad = async (goalMid) => {
     let currentMid = await listenState().mid;
 
     do {
