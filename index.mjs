@@ -1,20 +1,12 @@
-import { start, command } from './commands.mjs';
+import { start, command, lookForMissionPad } from './commands.mjs';
 
 const main = async () => {
     await start();
+    console.log('started');
 
     await command('takeoff');
-
-    await command('forward 100');
-
-    await command('left 100');
-
-    await command('back 100');
-
-    await command('right 100');
-
-    await command('land');
+    await lookForMissionPad(5);
 }
 
-// main();
-start();
+main();
+// start();S

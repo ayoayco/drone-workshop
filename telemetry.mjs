@@ -18,7 +18,7 @@ export const listenState = () => new Promise(
         const attributePairs = message.split(';')
         const rawState = {};
         const allowedKeys = ['mid','x','y','z'];
-        
+
         attributePairs.map((attribute) => {
             const [key, value] = attribute.split(':');
             return { key, value }
@@ -27,8 +27,6 @@ export const listenState = () => new Promise(
         .forEach(attribute => {
             rawState[attribute.key] = attribute.value;
         })
-
-        console.log(message);
 
         if (message === 'error') {
             reject(message);

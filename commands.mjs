@@ -31,6 +31,7 @@ const delay = (seconds) => {
 
 export const command = (task) => new Promise((resolve, reject) => {
     console.log(task);
+
     server.once('message', async message => {
         console.log(message.toString());
         const state = await listenState();
@@ -52,8 +53,8 @@ const getExpected = (current, to) => ({
 const getDivergence = (result, expected) => ({
     x: result.x - expected.x,
     y: result.y - expected.y,
-    z: result.z - expected.z, 
-}); 
+    z: result.z - expected.z,
+});
 
 export const move = async (to, speed = 80) => {
     const current = await listenState();
@@ -70,12 +71,18 @@ export const move = async (to, speed = 80) => {
     };
 };
 
-export const lookForMissionPad = async (goalMid) => {
+export const lookForMissionPad = async (goalMid) => new Promise((resolve, reject) => {
     let currentMid = await listenState().mid;
 
     do {
         currentMid = await command('forward 100');
+        console.log(currentMid);
     } while (currentMid === goalMid);
-}
 
-export const start = async () => command('command');
+    resolve(listenState())
+});
+
+export const start = async () => {
+    server.send('command', commandPort, ipAddress, (err) => {if (err) console.log(err)});
+    return delay(1);
+}
